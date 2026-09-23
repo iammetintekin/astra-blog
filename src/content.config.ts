@@ -1,6 +1,7 @@
 import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
+import { CATEGORY_SLUGS } from './consts';
 
 const blog = defineCollection({
 	// Load Markdown and MDX files in the `src/content/blog/` directory.
@@ -14,6 +15,12 @@ const blog = defineCollection({
 			pubDate: z.coerce.date(),
 			updatedDate: z.coerce.date().optional(),
 			heroImage: z.optional(image()),
+			// consts.ts içindeki CATEGORIES listesinden bir slug (örn. 'yazilim')
+			category: z.enum(CATEGORY_SLUGS),
+			// Serbest etiketler (örn. ['astro', 'cloudflare'])
+			tags: z.array(z.string()).default([]),
+			// true ise yazı yayına alınmaz; sadece `npm run dev` ile yerelde görünür
+			draft: z.boolean().default(false),
 		}),
 });
 

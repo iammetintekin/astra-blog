@@ -1,0 +1,23 @@
+---
+import type { Post } from '../utils/posts';
+import PostCard from './PostCard.astro';
+
+interface Props {
+	posts: Post[];
+	emptyText?: string;
+}
+
+const { posts, emptyText = 'Burada henüz yazı yok.' } = Astro.props;
+---
+
+{
+	posts.length === 0 ? (
+		<p class="empty">{emptyText}</p>
+	) : (
+		<div class="post-grid">
+			{posts.map((post) => (
+				<PostCard post={post} />
+			))}
+		</div>
+	)
+}

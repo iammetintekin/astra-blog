@@ -2,6 +2,10 @@
 title: 'First post'
 description: 'Lorem ipsum dolor sit amet'
 pubDate: 'Jul 08 2022'
+category: 'kisisel'
+tags: ['ornek']
+# Şablonla gelen örnek yazı: yayına çıkmaz, istersen sil
+draft: true
 heroImage: '../../assets/blog-placeholder-3.jpg'
 ---
 

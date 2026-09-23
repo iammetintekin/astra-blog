@@ -1,0 +1,29 @@
+---
+import { AUTHOR, SITE_TITLE } from '../consts';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SocialLinks from '../components/SocialLinks.astro';
+---
+
+<BaseLayout title={`Hakkımda | ${SITE_TITLE}`} description={`${AUTHOR.name} kimdir?`}>
+	<h1 class="page-title">Hakkımda</h1>
+	<div class="prose">
+		<!-- TODO: Bu bölümü kendi cümlelerinle doldur. -->
+		<p>
+			Merhaba, ben {AUTHOR.name}. {AUTHOR.role} olarak çalışıyorum.
+		</p>
+		<p>
+			[Buraya kendini anlatan birkaç paragraf yaz: ne iş yaptığın, nelerle ilgilendiğin, bu sitede neler
+			paylaşacağın ve sana nasıl ulaşılabileceği.]
+		</p>
+		<h2>İletişim</h2>
+		<p>Aşağıdaki kanallardan bana ulaşabilirsin:</p>
+		<SocialLinks />
+	</div>
+</BaseLayout>
+
+<style>
+	h2 {
+		font-size: 1.563em;
+		margin-top: 1.5em;
+	}
+</style>

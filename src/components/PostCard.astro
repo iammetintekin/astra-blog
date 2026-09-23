@@ -1,0 +1,30 @@
+---
+import { Image } from 'astro:assets';
+import type { Post } from '../utils/posts';
+import CategoryBadge from './CategoryBadge.astro';
+import FormattedDate from './FormattedDate.astro';
+
+interface Props {
+	post: Post;
+}
+
+const { post } = Astro.props;
+const url = `/blog/${post.id}/`;
+---
+
+<article class="post-card">
+	{
+		post.data.heroImage && (
+			<a href={url} class="post-card-image" tabindex="-1" aria-hidden="true">
+				<Image width={720} height={360} src={post.data.heroImage} alt="" />
+			</a>
+		)
+	}
+	<div class="post-card-meta">
+		<CategoryBadge slug={post.data.category} />
+		<FormattedDate date={post.data.pubDate} />
+		{post.data.draft && <span class="draft-label">Taslak</span>}
+	</div>
+	<h3 class="post-card-title"><a href={url}>{post.data.title}</a></h3>
+	<p class="post-card-desc">{post.data.description}</p>
+</article>

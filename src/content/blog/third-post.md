@@ -2,6 +2,10 @@
 title: 'Third post'
 description: 'Lorem ipsum dolor sit amet'
 pubDate: 'Jul 22 2022'
+category: 'kariyer'
+tags: ['ornek']
+# Şablonla gelen örnek yazı: yayına çıkmaz, istersen sil
+draft: true
 heroImage: '../../assets/blog-placeholder-2.jpg'
 ---
 

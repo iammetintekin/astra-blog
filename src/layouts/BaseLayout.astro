@@ -1,0 +1,30 @@
+---
+import type { ImageMetadata } from 'astro';
+import BaseHead from '../components/BaseHead.astro';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+
+interface Props {
+	title: string;
+	description: string;
+	image?: ImageMetadata;
+	/** normal: 720px okuma genişliği, wide: 960px liste sayfaları, full: tam genişlik */
+	width?: 'normal' | 'wide' | 'full';
+}
+
+const { title, description, image, width = 'normal' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="tr">
+	<head>
+		<BaseHead title={title} description={description} image={image} />
+	</head>
+	<body>
+		<Header />
+		<main class={`main-${width}`}>
+			<slot />
+		</main>
+		<Footer />
+	</body>
+</html>

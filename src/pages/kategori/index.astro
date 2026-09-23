@@ -1,0 +1,31 @@
+---
+import CategoryGrid from '../../components/CategoryGrid.astro';
+import { SITE_TITLE } from '../../consts';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPosts, getTags } from '../../utils/posts';
+
+const posts = await getPosts();
+const tags = getTags(posts);
+---
+
+<BaseLayout title={`Kategoriler | ${SITE_TITLE}`} description="Yazıları konularına göre keşfet." width="wide">
+	<h1 class="page-title">Kategoriler</h1>
+	<p class="page-lead">Yazıları konularına göre keşfet.</p>
+	<CategoryGrid posts={posts} />
+	{
+		tags.length > 0 && (
+			<section class="section">
+				<div class="section-head">
+					<h2>Etiketler</h2>
+				</div>
+				<div class="chips">
+					{tags.map((t) => (
+						<a class="chip" href={`/etiket/${t.slug}/`}>
+							#{t.name} ({t.count})
+						</a>
+					))}
+				</div>
+			</section>
+		)
+	}
+</BaseLayout>

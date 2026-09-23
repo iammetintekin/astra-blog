@@ -1,0 +1,11 @@
+---
+import { getCategory } from '../consts';
+
+interface Props {
+	slug: string;
+}
+
+const category = getCategory(Astro.props.slug);
+---
+
+<a class="badge" href={`/kategori/${category.slug}/`}>{category.name}</a>

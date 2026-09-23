@@ -1,0 +1,23 @@
+---
+import { CATEGORIES } from '../consts';
+import type { Post } from '../utils/posts';
+import { countByCategory } from '../utils/posts';
+
+interface Props {
+	posts: Post[];
+}
+
+const counts = countByCategory(Astro.props.posts);
+---
+
+<div class="category-grid">
+	{
+		CATEGORIES.map((c) => (
+			<a class="category-card" href={`/kategori/${c.slug}/`}>
+				<span class="category-name">{c.name}</span>
+				<span class="category-desc">{c.description}</span>
+				<span class="category-count">{counts[c.slug]} yazı</span>
+			</a>
+		))
+	}
+</div>

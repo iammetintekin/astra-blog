@@ -1,63 +1,52 @@
-# Astro Starter Kit: Blog
+# metintekin.com
 
-```sh
-npm create astro@latest -- --template blog
-```
+Astro ile yapılmış kişisel sitem. Cloudflare üzerinde yayında; `main` dalına push edince otomatik güncellenir.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Komutlar
 
-Features:
+| Komut             | Ne yapar                                        |
+| :---------------- | :---------------------------------------------- |
+| `npm install`     | Bağımlılıkları kurar                            |
+| `npm run dev`     | Yerel sunucu: `http://localhost:4321` (taslaklar da görünür) |
+| `npm run build`   | Siteyi `./dist/` klasörüne üretir              |
+| `npm run preview` | Üretilen siteyi yerelde önizler                 |
 
-- ✅ Minimal styling (make it your own!)
-- ✅ 100/100 Lighthouse performance
-- ✅ SEO-friendly with canonical URLs and Open Graph data
-- ✅ Sitemap support
-- ✅ RSS Feed support
-- ✅ Markdown & MDX support
+## Yeni yazı eklemek
 
-## 🚀 Project Structure
+1. `src/content/blog/ornek-yazi.md` dosyasını kopyala, adını değiştir (dosya adı = adres: `/blog/dosya-adi/`).
+2. Üstteki alanları doldur:
 
-Inside of your Astro project, you'll see the following folders and files:
+   ```yaml
+   ---
+   title: 'Başlık'
+   description: 'Kısa açıklama (liste ve Google sonuçlarında görünür)'
+   pubDate: '2026-09-23'
+   heroImage: '../../assets/kapak.jpg' # isteğe bağlı
+   category: 'yazilim'                 # zorunlu, aşağıdaki listeden
+   tags: ['astro', 'cloudflare']       # isteğe bağlı
+   draft: false                        # true ise yayına çıkmaz
+   ---
+   ```
 
-```text
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── content/
-│   ├── layouts/
-│   └── pages/
-├── astro.config.mjs
-├── README.md
-├── package.json
-└── tsconfig.json
-```
+3. `npm run dev` ile kontrol et, sonra commit + push.
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Kategoriler, isim, sosyal linkler
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+Hepsi tek dosyada: `src/consts.ts`
 
-The `src/content/` directory contains "collections" of related Markdown and MDX documents. Use `getCollection()` to retrieve posts from `src/content/blog/`, and type-check your frontmatter using an optional schema. See [Astro's Content Collections docs](https://docs.astro.build/en/guides/content-collections/) to learn more.
+- **Kategori eklemek/değiştirmek:** `CATEGORIES` listesine `{ slug, name, description }` ekle. Sayfası otomatik oluşur: `/kategori/<slug>/`.
+- **Sosyal linkler:** `SOCIAL_LINKS` içindeki boş `href` değerlerini doldur (boş olanlar gizlenir).
+- **İsim / unvan / kısa tanıtım:** `AUTHOR`.
 
-Any static assets, like images, can be placed in the `public/` directory.
+## Sayfalar
 
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
-
-## Credit
-
-This theme is based off of the lovely [Bear Blog](https://github.com/HermanMartinus/bearblog/).
+| Adres                | İçerik                                      |
+| :------------------- | :------------------------------------------ |
+| `/`                  | Tanıtım, kategoriler, son yazılar           |
+| `/blog/`             | Tüm yazılar + kategori filtresi             |
+| `/blog/<yazi>/`      | Yazı (kategori, etiketler, benzer yazılar)  |
+| `/kategori/`         | Tüm kategoriler ve etiketler                |
+| `/kategori/<slug>/`  | Bir kategorinin yazıları                    |
+| `/etiket/<etiket>/`  | Bir etiketin yazıları                       |
+| `/hakkimda/`         | Hakkımda sayfası (`src/pages/hakkimda.astro`) |
+| `/rss.xml`           | RSS beslemesi                               |

@@ -1,0 +1,27 @@
+---
+import PostList from '../../components/PostList.astro';
+import { SITE_TITLE } from '../../consts';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPosts, getTags, type Post, slugify } from '../../utils/posts';
+
+export async function getStaticPaths() {
+	const posts = await getPosts();
+	return getTags(posts).map((t) => ({
+		params: { tag: t.slug },
+		props: { name: t.name, posts: posts.filter((p) => p.data.tags.some((x) => slugify(x) === t.slug)) },
+	}));
+}
+
+interface Props {
+	name: string;
+	posts: Post[];
+}
+
+const { name, posts } = Astro.props;
+---
+
+<BaseLayout title={`#${name} | ${SITE_TITLE}`} description={`"${name}" etiketli yazılar`} width="wide">
+	<h1 class="page-title">#{name}</h1>
+	<p class="page-lead">Bu etikete sahip {posts.length} yazı. <a href="/kategori/">Tüm kategoriler ve etiketler →</a></p>
+	<PostList posts={posts} />
+</BaseLayout>

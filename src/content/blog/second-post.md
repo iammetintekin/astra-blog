@@ -2,6 +2,10 @@
 title: 'Second post'
 description: 'Lorem ipsum dolor sit amet'
 pubDate: 'Jul 15 2022'
+category: 'teknoloji'
+tags: ['ornek']
+# Şablonla gelen örnek yazı: yayına çıkmaz, istersen sil
+draft: true
 heroImage: '../../assets/blog-placeholder-4.jpg'
 ---
 

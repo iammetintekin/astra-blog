@@ -1,0 +1,22 @@
+---
+import CategoryChips from '../../components/CategoryChips.astro';
+import PostList from '../../components/PostList.astro';
+import { CATEGORIES, getCategory, SITE_TITLE } from '../../consts';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPosts } from '../../utils/posts';
+
+export function getStaticPaths() {
+	return CATEGORIES.map((c) => ({ params: { category: c.slug } }));
+}
+
+const category = getCategory(Astro.params.category);
+const allPosts = await getPosts();
+const posts = allPosts.filter((p) => p.data.category === category.slug);
+---
+
+<BaseLayout title={`${category.name} | ${SITE_TITLE}`} description={category.description} width="wide">
+	<h1 class="page-title">{category.name}</h1>
+	<p class="page-lead">{category.description}</p>
+	<CategoryChips posts={allPosts} active={category.slug} />
+	<PostList posts={posts} emptyText="Bu kategoride henüz yazı yok — yakında!" />
+</BaseLayout>

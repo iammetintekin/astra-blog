@@ -1,0 +1,24 @@
+---
+import { CATEGORIES } from '../consts';
+import type { Post } from '../utils/posts';
+import { countByCategory } from '../utils/posts';
+
+interface Props {
+	posts: Post[];
+	active?: string;
+}
+
+const { posts, active } = Astro.props;
+const counts = countByCategory(posts);
+---
+
+<nav class="chips" aria-label="Kategoriler">
+	<a class:list={['chip', { active: !active }]} href="/blog/">Tümü ({posts.length})</a>
+	{
+		CATEGORIES.map((c) => (
+			<a class:list={['chip', { active: active === c.slug }]} href={`/kategori/${c.slug}/`}>
+				{c.name} ({counts[c.slug]})
+			</a>
+		))
+	}
+</nav>

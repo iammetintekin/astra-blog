@@ -7,6 +7,10 @@ import { defineConfig, fontProviders } from 'astro/config';
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://metintekin.com',
+	// Eski adresleri yenilerine yönlendir
+	redirects: {
+		'/about': '/hakkimda',
+	},
 	integrations: [mdx(), sitemap()],
 	fonts: [
 		{
