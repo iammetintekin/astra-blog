@@ -1,0 +1,33 @@
+---
+// Yazı listesi sayfalarının ortak düzeni (Yazılar, kategori, etiket) — sayfalamalı
+import Pagination from '../components/Pagination.astro';
+import PostList from '../components/PostList.astro';
+import { SITE_TITLE } from '../consts';
+import type { Page } from '../utils/pagination';
+import type { Post } from '../utils/posts';
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+	/** Sekme/Google başlığı ve sayfadaki büyük başlık */
+	title: string;
+	description: string;
+	page: Page<Post>;
+	emptyText?: string;
+}
+
+const { title, description, page, emptyText } = Astro.props;
+const suffix = page.current > 1 ? ` — Sayfa ${page.current}` : '';
+---
+
+<BaseLayout
+	title={`${title}${suffix} | ${SITE_TITLE}`}
+	description={page.current > 1 ? `${description} (Sayfa ${page.current}/${page.total})` : description}
+	width="wide"
+>
+	<h1 class="page-title">
+		{title}{page.current > 1 && <span class="page-title-sub"> · Sayfa {page.current}</span>}
+	</h1>
+	<slot />
+	<PostList posts={page.items} emptyText={emptyText} />
+	<Pagination page={page} />
+</BaseLayout>

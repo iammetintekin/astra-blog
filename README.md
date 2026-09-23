@@ -70,9 +70,11 @@ Taslaklar ve `noindex` işaretli yazılar arama motorlarına kapalıdır.
 | Adres                | İçerik                                      |
 | :------------------- | :------------------------------------------ |
 | `/`                  | Tanıtım, kategoriler, son yazılar           |
-| `/blog/`             | Tüm yazılar + kategori filtresi             |
+| `/blog/`             | Tüm yazılar + kategori filtresi (12'şerli sayfalar: `/blog/sayfa/2/` …) |
 | `/blog/<yazi>/`      | Yazı (kategori, etiketler, benzer yazılar)  |
 | `/kategori/`         | Tüm kategoriler ve etiketler                |
-| `/kategori/<slug>/`  | Bir kategorinin yazıları                    |
-| `/etiket/<etiket>/`  | Bir etiketin yazıları                       |
+| `/kategori/<slug>/`  | Bir kategorinin yazıları (`…/sayfa/2/` …)   |
+| `/etiket/<etiket>/`  | Bir etiketin yazıları (`…/sayfa/2/` …)      |
+
+Sayfa başına yazı sayısı: `src/consts.ts` → `POSTS_PER_PAGE`.
 | `/hakkimda/`         | Hakkımda sayfası (`src/pages/hakkimda.astro`) |

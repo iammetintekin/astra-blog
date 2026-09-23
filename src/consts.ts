@@ -11,6 +11,9 @@ export const SITE_DESCRIPTION = site.description;
 export const AUTHOR = site.author;
 export const SEO = site.seo;
 
+// Yazı listelerinde (/blog, kategori ve etiket sayfaları) sayfa başına yazı sayısı
+export const POSTS_PER_PAGE = 12;
+
 const email = site.social.email.trim();
 
 // href boş olan linkler sitede gösterilmez.

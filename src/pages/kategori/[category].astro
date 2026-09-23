@@ -1,8 +1,8 @@
 ---
 import CategoryChips from '../../components/CategoryChips.astro';
-import PostList from '../../components/PostList.astro';
-import { CATEGORIES, getCategory, SITE_TITLE } from '../../consts';
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import { CATEGORIES, getCategory } from '../../consts';
+import ListingLayout from '../../layouts/ListingLayout.astro';
+import { getPage } from '../../utils/pagination';
 import { getPosts } from '../../utils/posts';
 
 export function getStaticPaths() {
@@ -12,11 +12,15 @@ export function getStaticPaths() {
 const category = getCategory(Astro.params.category);
 const allPosts = await getPosts();
 const posts = allPosts.filter((p) => p.data.category === category.slug);
+const page = getPage(posts, 1, `/kategori/${category.slug}/`);
 ---
 
-<BaseLayout title={`${category.name} | ${SITE_TITLE}`} description={category.description} width="wide">
-	<h1 class="page-title">{category.name}</h1>
+<ListingLayout
+	title={category.name}
+	description={category.description}
+	page={page}
+	emptyText="Bu kategoride henüz yazı yok — yakında!"
+>
 	<p class="page-lead">{category.description}</p>
 	<CategoryChips posts={allPosts} active={category.slug} />
-	<PostList posts={posts} emptyText="Bu kategoride henüz yazı yok — yakında!" />
-</BaseLayout>
+</ListingLayout>

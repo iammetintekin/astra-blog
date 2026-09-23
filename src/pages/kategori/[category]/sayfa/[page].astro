@@ -1,0 +1,26 @@
+---
+// /kategori/<kategori>/sayfa/2/ …
+import CategoryChips from '../../../../components/CategoryChips.astro';
+import { CATEGORIES, getCategory } from '../../../../consts';
+import ListingLayout from '../../../../layouts/ListingLayout.astro';
+import { extraPageNumbers, getPage } from '../../../../utils/pagination';
+import { getPosts } from '../../../../utils/posts';
+
+export async function getStaticPaths() {
+	const posts = await getPosts();
+	return CATEGORIES.flatMap((c) =>
+		extraPageNumbers(posts.filter((p) => p.data.category === c.slug).length).map((n) => ({
+			params: { category: c.slug, page: String(n) },
+		})),
+	);
+}
+
+const category = getCategory(Astro.params.category);
+const allPosts = await getPosts();
+const posts = allPosts.filter((p) => p.data.category === category.slug);
+const page = getPage(posts, Number(Astro.params.page), `/kategori/${category.slug}/`);
+---
+
+<ListingLayout title={category.name} description={category.description} page={page}>
+	<CategoryChips posts={allPosts} active={category.slug} />
+</ListingLayout>

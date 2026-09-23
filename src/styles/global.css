@@ -390,3 +390,69 @@ main.main-full {
 		font-size: 1.953em;
 	}
 }
+
+/* ------------------------------------------------------------------
+   Sayfalama
+   ------------------------------------------------------------------ */
+.page-title-sub {
+	color: rgb(var(--gray));
+	font-size: 0.5em;
+	font-weight: 400;
+}
+.pagination {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1em;
+	margin-top: 3em;
+	padding-top: 1.5em;
+	border-top: 1px solid rgb(var(--gray-light));
+	font-size: 0.85em;
+}
+.page-numbers {
+	display: flex;
+	align-items: center;
+	gap: 0.35em;
+}
+.page-step,
+.page-num {
+	padding: 0.3em 0.8em;
+	border: 1px solid rgb(var(--gray-light));
+	border-radius: 999px;
+	background: #fff;
+	color: rgb(var(--gray-dark));
+	text-decoration: none;
+	transition: 0.2s ease;
+}
+.page-num {
+	min-width: 2.3em;
+	text-align: center;
+}
+a.page-step:hover,
+a.page-num:hover {
+	border-color: var(--accent);
+	color: var(--accent);
+}
+.page-num.current {
+	background: var(--accent);
+	border-color: var(--accent);
+	color: #fff;
+	font-weight: 700;
+}
+.page-step.disabled {
+	opacity: 0.4;
+}
+.page-gap {
+	color: rgb(var(--gray));
+}
+@media (max-width: 720px) {
+	.pagination {
+		flex-wrap: wrap;
+		justify-content: center;
+	}
+	.page-numbers {
+		order: -1;
+		width: 100%;
+		justify-content: center;
+	}
+}

@@ -1,0 +1,52 @@
+---
+import { type Page, pageUrl } from '../utils/pagination';
+
+interface Props {
+	page: Page<unknown>;
+}
+
+const { page } = Astro.props;
+
+// 1 … 4 5 6 … 10 biçiminde sayfa numaraları
+const numbers: (number | null)[] = [];
+for (let n = 1; n <= page.total; n++) {
+	if (n === 1 || n === page.total || Math.abs(n - page.current) <= 1) numbers.push(n);
+	else if (numbers.at(-1) !== null) numbers.push(null);
+}
+---
+
+{
+	page.total > 1 && (
+		<nav class="pagination" aria-label="Sayfalar">
+			{page.prev ? (
+				<a class="page-step" href={page.prev} rel="prev">
+					← Önceki
+				</a>
+			) : (
+				<span class="page-step disabled">← Önceki</span>
+			)}
+			<div class="page-numbers">
+				{numbers.map((n) =>
+					n === null ? (
+						<span class="page-gap">…</span>
+					) : n === page.current ? (
+						<span class="page-num current" aria-current="page">
+							{n}
+						</span>
+					) : (
+						<a class="page-num" href={pageUrl(page.base, n)}>
+							{n}
+						</a>
+					),
+				)}
+			</div>
+			{page.next ? (
+				<a class="page-step" href={page.next} rel="next">
+					Sonraki →
+				</a>
+			) : (
+				<span class="page-step disabled">Sonraki →</span>
+			)}
+		</nav>
+	)
+}

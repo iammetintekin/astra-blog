@@ -1,0 +1,19 @@
+---
+// /blog/sayfa/2/, /blog/sayfa/3/ … (1. sayfa: /blog/)
+import CategoryChips from '../../../components/CategoryChips.astro';
+import ListingLayout from '../../../layouts/ListingLayout.astro';
+import { extraPageNumbers, getPage } from '../../../utils/pagination';
+import { getPosts } from '../../../utils/posts';
+
+export async function getStaticPaths() {
+	const posts = await getPosts();
+	return extraPageNumbers(posts.length).map((n) => ({ params: { page: String(n) } }));
+}
+
+const posts = await getPosts();
+const page = getPage(posts, Number(Astro.params.page), '/blog/');
+---
+
+<ListingLayout title="Yazılar" description="Tüm yazılar, en yeniden eskiye." page={page}>
+	<CategoryChips posts={posts} />
+</ListingLayout>

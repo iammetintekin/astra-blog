@@ -1,16 +1,14 @@
 ---
 import CategoryChips from '../../components/CategoryChips.astro';
-import PostList from '../../components/PostList.astro';
-import { SITE_TITLE } from '../../consts';
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import ListingLayout from '../../layouts/ListingLayout.astro';
+import { getPage } from '../../utils/pagination';
 import { getPosts } from '../../utils/posts';
 
 const posts = await getPosts();
+const page = getPage(posts, 1, '/blog/');
 ---
 
-<BaseLayout title={`Yazılar | ${SITE_TITLE}`} description="Tüm yazılar, en yeniden eskiye." width="wide">
-	<h1 class="page-title">Yazılar</h1>
+<ListingLayout title="Yazılar" description="Tüm yazılar, en yeniden eskiye." page={page} emptyText="Henüz yazı yok — yakında!">
 	<p class="page-lead">Tüm yazılar, en yeniden eskiye. Bir kategori seçerek filtreleyebilirsin.</p>
 	<CategoryChips posts={posts} />
-	<PostList posts={posts} emptyText="Henüz yazı yok — yakında!" />
-</BaseLayout>
+</ListingLayout>

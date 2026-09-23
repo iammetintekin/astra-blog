@@ -1,7 +1,6 @@
 ---
-import PostList from '../../components/PostList.astro';
-import { SITE_TITLE } from '../../consts';
-import BaseLayout from '../../layouts/BaseLayout.astro';
+import ListingLayout from '../../layouts/ListingLayout.astro';
+import { getPage } from '../../utils/pagination';
 import { getPosts, getTags, type Post, slugify } from '../../utils/posts';
 
 export async function getStaticPaths() {
@@ -18,10 +17,9 @@ interface Props {
 }
 
 const { name, posts } = Astro.props;
+const page = getPage(posts, 1, `/etiket/${Astro.params.tag}/`);
 ---
 
-<BaseLayout title={`#${name} | ${SITE_TITLE}`} description={`"${name}" etiketli yazılar`} width="wide">
-	<h1 class="page-title">#{name}</h1>
+<ListingLayout title={`#${name}`} description={`"${name}" etiketli yazılar`} page={page}>
 	<p class="page-lead">Bu etikete sahip {posts.length} yazı. <a href="/kategori/">Tüm kategoriler ve etiketler →</a></p>
-	<PostList posts={posts} />
-</BaseLayout>
+</ListingLayout>

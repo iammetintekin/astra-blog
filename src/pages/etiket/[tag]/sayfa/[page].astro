@@ -1,0 +1,27 @@
+---
+// /etiket/<etiket>/sayfa/2/ …
+import ListingLayout from '../../../../layouts/ListingLayout.astro';
+import { extraPageNumbers, getPage } from '../../../../utils/pagination';
+import { getPosts, getTags, type Post, slugify } from '../../../../utils/posts';
+
+export async function getStaticPaths() {
+	const posts = await getPosts();
+	return getTags(posts).flatMap((t) => {
+		const tagged = posts.filter((p) => p.data.tags.some((x) => slugify(x) === t.slug));
+		return extraPageNumbers(tagged.length).map((n) => ({
+			params: { tag: t.slug, page: String(n) },
+			props: { name: t.name, posts: tagged },
+		}));
+	});
+}
+
+interface Props {
+	name: string;
+	posts: Post[];
+}
+
+const { name, posts } = Astro.props;
+const page = getPage(posts, Number(Astro.params.page), `/etiket/${Astro.params.tag}/`);
+---
+
+<ListingLayout title={`#${name}`} description={`"${name}" etiketli yazılar`} page={page} />
