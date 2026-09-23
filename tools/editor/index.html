@@ -1,0 +1,1141 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Yazı Editörü</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>✍️</text></svg>" />
+<style>
+:root {
+	--accent: #2337ff; --accent-dark: #000d8a; --accent-soft: rgba(35, 55, 255, .08);
+	--bg: #f4f6fb; --panel: #fff; --line: #e3e7ef; --text: #1d2433; --muted: #667391;
+	--ok: #12803f; --warn: #b86e00; --bad: #c62828; --r: 10px; --top: 56px;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+button, input, select, textarea { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+
+/* Üst çubuk */
+.topbar { position: sticky; top: 0; z-index: 20; height: var(--top); display: flex; align-items: center; gap: 16px; padding: 0 16px; background: var(--panel); border-bottom: 1px solid var(--line); }
+.brand { font-weight: 700; white-space: nowrap; }
+.brand small { font-weight: 400; color: var(--muted); margin-left: 4px; }
+.tabs { display: flex; gap: 2px; }
+.tabs button { border: 0; background: none; padding: 7px 12px; border-radius: 8px; cursor: pointer; color: var(--muted); }
+.tabs button:hover { color: var(--text); }
+.tabs button.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.status { color: var(--muted); font-size: 13px; white-space: nowrap; }
+.status.dirty { color: var(--warn); font-weight: 600; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 1px solid var(--line); background: var(--panel); padding: 7px 14px; border-radius: 8px; cursor: pointer; text-decoration: none; color: var(--text); white-space: nowrap; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.btn.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: #fff; }
+.btn.danger { color: var(--bad); }
+.btn.danger:hover { border-color: var(--bad); background: #fdecec; }
+.btn.block { width: 100%; }
+.btn.small { padding: 4px 10px; font-size: 13px; }
+
+/* Yerleşim */
+.layout { display: grid; grid-template-columns: 280px minmax(0, 1fr); min-height: calc(100vh - var(--top)); }
+.sidebar { position: sticky; top: var(--top); height: calc(100vh - var(--top)); overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px; background: var(--panel); border-right: 1px solid var(--line); }
+.sidebar .search { width: 100%; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; }
+.filter { display: flex; flex-wrap: wrap; gap: 4px; }
+.filter button { border: 1px solid var(--line); background: #fff; border-radius: 99px; padding: 2px 9px; font-size: 12px; cursor: pointer; color: var(--muted); }
+.filter button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+#postList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+#postList li { padding: 8px 10px; border-radius: 8px; cursor: pointer; border: 1px solid transparent; }
+#postList li:hover { background: var(--bg); }
+#postList li.active { background: var(--accent-soft); border-color: rgba(35, 55, 255, .2); }
+#postList .pt { font-weight: 600; line-height: 1.3; }
+#postList .pm { margin-top: 2px; font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+#postList .empty { color: var(--muted); cursor: default; }
+.pill { font-size: 11px; padding: 0 7px; border-radius: 99px; background: #fff4d6; color: #8a5a00; font-weight: 600; }
+.pill.err { background: #fdecec; color: var(--bad); }
+.side-foot { margin-top: auto; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 10px; }
+.side-foot a { color: var(--accent); }
+
+main { padding: 24px; min-width: 0; }
+.tab { display: none; max-width: 1240px; margin: 0 auto; flex-direction: column; gap: 16px; }
+.tab.active { display: flex; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; }
+h2.h { margin: 0; font-size: 18px; }
+p.lead { margin: 4px 0 0; color: var(--muted); }
+
+label, .label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.label-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+input[type=text], input[type=url], input[type=email], input[type=date], input:not([type]), select, textarea {
+	width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-weight: 400; color: var(--text);
+}
+textarea { resize: vertical; }
+input:focus, select:focus, textarea:focus { outline: 3px solid var(--accent-soft); border-color: var(--accent); }
+input[readonly] { background: var(--bg); color: var(--muted); }
+.hint { font-size: 12px; font-weight: 400; color: var(--muted); }
+.hint code { background: var(--bg); padding: 0 4px; border-radius: 4px; }
+.check { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; color: var(--text); cursor: pointer; }
+.check input { width: 16px; height: 16px; accent-color: var(--accent); }
+.counter { font-weight: 500; font-size: 12px; }
+.counter.ok { color: var(--ok); }
+.counter.warn { color: var(--warn); }
+
+/* Yazı formu */
+.title-input { font-size: 30px !important; font-weight: 700 !important; border: 0 !important; background: transparent !important; padding: 2px 0 !important; outline: none !important; }
+.meta-grid { display: grid; grid-template-columns: minmax(200px, 2fr) 1.2fr 1fr 1fr auto; gap: 12px; align-items: end; }
+.slug-wrap { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: #fff; overflow: hidden; }
+.slug-wrap:focus-within { outline: 3px solid var(--accent-soft); border-color: var(--accent); }
+.slug-wrap span { padding-left: 10px; color: var(--muted); font-weight: 400; }
+.slug-wrap input { border: 0 !important; outline: none !important; padding-left: 1px !important; }
+.draft-box { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; height: 38px; }
+.draft-box.on { background: #fff4d6; border-color: #f0d9a0; }
+.two { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+
+.tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: #fff; min-height: 40px; }
+.tags:focus-within { outline: 3px solid var(--accent-soft); border-color: var(--accent); }
+.tags input { flex: 1; min-width: 140px; border: 0 !important; padding: 3px 4px !important; outline: none !important; }
+.tag { display: inline-flex; align-items: center; gap: 4px; background: var(--accent-soft); color: var(--accent); padding: 2px 6px 2px 9px; border-radius: 99px; font-weight: 600; font-size: 13px; }
+.tag button { border: 0; background: none; color: inherit; cursor: pointer; padding: 0 3px; font-size: 15px; line-height: 1; }
+
+.drop { position: relative; min-height: 168px; flex: 1; border: 2px dashed var(--line); border-radius: var(--r); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; color: var(--muted); cursor: pointer; overflow: hidden; background: #fff; font-weight: 400; padding: 12px; }
+.drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.drop img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.drop .rm { position: absolute; top: 8px; right: 8px; z-index: 1; }
+.drop .big { font-size: 26px; }
+
+/* Editör */
+.editor-card { padding: 0; overflow: hidden; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; padding: 6px 8px; border-bottom: 1px solid var(--line); background: #fafbfd; }
+.toolbar button { border: 0; background: none; padding: 5px 8px; border-radius: 6px; cursor: pointer; min-width: 32px; font-size: 13px; }
+.toolbar button:hover { background: var(--accent-soft); color: var(--accent); }
+.toolbar .sep { width: 1px; height: 20px; background: var(--line); margin: 0 4px; }
+.toolbar .spacer { flex: 1; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+.seg button { border-radius: 0 !important; padding: 4px 10px !important; }
+.seg button.active { background: var(--accent); color: #fff; }
+.editor { display: grid; grid-template-columns: 1fr 1fr; height: 68vh; min-height: 420px; }
+.editor.view-write { grid-template-columns: 1fr; }
+.editor.view-write .preview { display: none; }
+.editor.view-preview { grid-template-columns: 1fr; }
+.editor.view-preview #body { display: none; }
+#body { width: 100%; height: 100%; border: 0; border-radius: 0; resize: none; padding: 18px 20px; font: 15px/1.75 ui-monospace, "Cascadia Code", Consolas, monospace; outline: none; background: #fff; }
+#body.over { background: var(--accent-soft); }
+.preview { overflow: auto; padding: 18px 28px; border-left: 1px solid var(--line); font-size: 16px; line-height: 1.75; background: #fff; }
+.editor.view-preview .preview { border-left: 0; max-width: 780px; margin: 0 auto; width: 100%; }
+.preview h1, .preview h2, .preview h3, .preview h4 { line-height: 1.25; margin: 1.2em 0 .4em; }
+.preview img { max-width: 100%; border-radius: 8px; }
+.preview pre { background: #1d2433; color: #e8ecf5; padding: 14px; border-radius: 8px; overflow: auto; }
+.preview code { background: #eef1f7; padding: 1px 5px; border-radius: 4px; font-size: .88em; }
+.preview pre code { background: none; padding: 0; color: inherit; }
+.preview blockquote { border-left: 4px solid var(--accent); margin: 0; padding-left: 16px; color: var(--muted); }
+.preview table { border-collapse: collapse; }
+.preview th, .preview td { border: 1px solid var(--line); padding: 4px 10px; }
+.preview a { color: var(--accent); }
+.preview .placeholder { color: var(--muted); font-style: italic; }
+.editor-foot { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 6px 12px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); background: #fafbfd; }
+kbd { font: 11px ui-monospace, monospace; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; background: #fff; }
+
+/* SEO */
+details.card > summary { cursor: pointer; font-weight: 700; font-size: 15px; list-style: none; display: flex; align-items: center; gap: 8px; }
+details.card > summary::before { content: '▸'; color: var(--muted); transition: transform .15s; }
+details.card[open] > summary::before { transform: rotate(90deg); }
+.score { margin-left: auto; font-size: 12px; font-weight: 600; padding: 2px 10px; border-radius: 99px; background: var(--bg); color: var(--muted); }
+.score.good { background: #e3f5ea; color: var(--ok); }
+.score.mid { background: #fff4d6; color: var(--warn); }
+.seo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 14px; }
+.sub { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.serp { border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; font-family: arial, sans-serif; background: #fff; }
+.serp-site { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #202124; }
+.serp-site .fav { width: 26px; height: 26px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; font-size: 12px; }
+.serp-site small { display: block; color: #4d5156; }
+.serp-title { color: #1a0dab; font-size: 20px; line-height: 1.3; margin: 6px 0 2px; }
+.serp-desc { font-size: 14px; color: #4d5156; line-height: 1.55; }
+.social { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+.social img { width: 100%; aspect-ratio: 1.91 / 1; object-fit: cover; display: block; background: var(--bg); }
+.social .body { padding: 8px 12px; background: #f2f3f5; }
+.social .d { font-size: 12px; color: var(--muted); }
+.social .t { font-weight: 700; line-height: 1.3; }
+.social .s { font-size: 13px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.checks li { display: flex; gap: 8px; font-size: 13px; }
+.checks li::before { content: '✓'; flex: 0 0 16px; height: 16px; border-radius: 50%; background: #e3f5ea; color: var(--ok); font-size: 10px; font-weight: 700; display: grid; place-items: center; margin-top: 2px; }
+.checks li.warn::before { content: '!'; background: #fff4d6; color: var(--warn); }
+
+.danger-zone { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--muted); font-size: 12px; }
+
+/* Kategoriler + ayarlar */
+table.cats { width: 100%; border-collapse: collapse; }
+.cats th { text-align: left; font-size: 12px; color: var(--muted); padding: 6px; font-weight: 600; }
+.cats td { padding: 6px; vertical-align: top; }
+.cats td.count { color: var(--muted); padding-top: 14px; white-space: nowrap; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid .full { grid-column: 1 / -1; }
+.tab-foot { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* Bildirim + diyalog */
+#toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 16px); background: #1d2433; color: #fff; padding: 10px 18px; border-radius: 8px; opacity: 0; transition: .25s; pointer-events: none; z-index: 50; max-width: 90vw; box-shadow: 0 8px 30px rgba(0, 0, 0, .2); }
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+#toast.bad { background: var(--bad); }
+dialog { border: 0; border-radius: 12px; padding: 22px; width: min(600px, 92vw); box-shadow: 0 20px 60px rgba(0, 0, 0, .25); color: var(--text); }
+dialog::backdrop { background: rgba(20, 25, 40, .45); }
+dialog h3 { margin: 0 0 6px; }
+dialog pre { background: var(--bg); padding: 10px 12px; border-radius: 8px; max-height: 220px; overflow: auto; font-size: 12px; white-space: pre-wrap; margin: 8px 0; }
+dialog .warnbox { background: #fff4d6; color: #8a5a00; padding: 8px 12px; border-radius: 8px; font-size: 13px; margin: 8px 0; }
+.row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+@media (max-width: 1100px) {
+	.meta-grid { grid-template-columns: 1fr 1fr; }
+	.two, .seo-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 800px) {
+	.layout { grid-template-columns: 1fr; }
+	.sidebar { position: static; height: auto; max-height: 280px; }
+	.form-grid, .meta-grid { grid-template-columns: 1fr; }
+	.editor { grid-template-columns: 1fr; }
+	.editor.view-split .preview { display: none; }
+	.brand small, .status { display: none; }
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+	<div class="brand">✍️ Yazı Editörü<small id="siteName"></small></div>
+	<nav class="tabs" id="tabs">
+		<button data-tab="post" class="active">Yazı</button>
+		<button data-tab="categories">Kategoriler</button>
+		<button data-tab="site">Site &amp; SEO ayarları</button>
+	</nav>
+	<div class="actions">
+		<span id="status" class="status"></span>
+		<a id="viewLink" class="btn" target="_blank" rel="noopener" title="Yazıyı sitede önizle">Sitede gör ↗</a>
+		<button id="publishBtn" class="btn" title="Değişiklikleri GitHub'a gönder, Cloudflare yayınlasın">🚀 Yayınla</button>
+		<button id="saveBtn" class="btn primary" title="Ctrl+S">Kaydet</button>
+	</div>
+</header>
+
+<div class="layout">
+	<aside class="sidebar">
+		<button id="newBtn" class="btn primary block">+ Yeni yazı</button>
+		<input id="search" class="search" type="text" placeholder="Yazılarda ara…" />
+		<div class="filter" id="filter"></div>
+		<ul id="postList"></ul>
+		<div class="side-foot">
+			Yazılar: <code>src/content/blog</code><br />
+			Görseller: <code>src/assets/blog</code><br />
+			<a href="https://www.markdownguide.org/cheat-sheet/" target="_blank" rel="noopener">Markdown kısa rehberi ↗</a>
+		</div>
+	</aside>
+
+	<main>
+		<!-- ============================ YAZI ============================ -->
+		<section id="tab-post" class="tab active">
+			<input id="title" class="title-input" type="text" placeholder="Yazı başlığı…" autocomplete="off" />
+
+			<div class="meta-grid">
+				<label>Adres
+					<div class="slug-wrap"><span>/blog/</span><input id="slug" type="text" placeholder="yazi-adresi" autocomplete="off" /></div>
+				</label>
+				<label>Kategori <select id="category"></select></label>
+				<label>Yayın tarihi <input id="pubDate" type="date" /></label>
+				<label>Güncellenme <input id="updatedDate" type="date" /></label>
+				<label class="check draft-box" id="draftBox" title="Taslaklar yayına çıkmaz, sadece yerel önizlemede görünür">
+					<input id="draft" type="checkbox" /> Taslak
+				</label>
+			</div>
+
+			<div class="two">
+				<div class="stack">
+					<label>
+						<span class="label-row">Açıklama <small class="counter" id="c-description"></small></span>
+						<textarea id="description" rows="3" placeholder="Yazının 1-2 cümlelik özeti. Yazı listelerinde ve Google sonuçlarında görünür."></textarea>
+					</label>
+					<label>Etiketler
+						<div class="tags" id="tagBox"><input id="tagInput" type="text" list="tagSuggestions" placeholder="Etiket yaz, Enter'a bas…" autocomplete="off" /></div>
+						<datalist id="tagSuggestions"></datalist>
+						<span class="hint">Virgül veya Enter ile ekle. Her etiketin kendi sayfası olur: <code>/etiket/…</code></span>
+					</label>
+				</div>
+				<div class="stack">
+					<div class="label">Kapak görseli</div>
+					<div class="drop" id="heroDrop" tabindex="0">
+						<img id="heroImg" alt="" hidden />
+						<button id="heroRemove" class="btn small danger rm" type="button" hidden>Kaldır</button>
+						<span class="big">🖼️</span>
+						<span>Sürükle-bırak veya tıkla</span>
+						<span class="hint">İdeal: 1200×630 veya daha büyük, yatay</span>
+					</div>
+					<input id="heroFile" type="file" accept="image/*" hidden />
+				</div>
+			</div>
+
+			<div class="card editor-card">
+				<div class="toolbar" id="toolbar">
+					<button data-tool="h2" title="Başlık">H2</button>
+					<button data-tool="h3" title="Alt başlık">H3</button>
+					<span class="sep"></span>
+					<button data-tool="bold" title="Kalın (Ctrl+B)"><b>B</b></button>
+					<button data-tool="italic" title="İtalik (Ctrl+I)"><i>I</i></button>
+					<button data-tool="strike" title="Üstü çizili"><s>S</s></button>
+					<button data-tool="link" title="Link (Ctrl+K)">🔗</button>
+					<span class="sep"></span>
+					<button data-tool="ul" title="Madde listesi">• Liste</button>
+					<button data-tool="ol" title="Numaralı liste">1. Liste</button>
+					<button data-tool="quote" title="Alıntı">❝</button>
+					<button data-tool="code" title="Satır içi kod">&lt;/&gt;</button>
+					<button data-tool="codeblock" title="Kod bloğu">{ } Kod</button>
+					<button data-tool="table" title="Tablo">▦ Tablo</button>
+					<button data-tool="hr" title="Ayraç çizgisi">―</button>
+					<span class="sep"></span>
+					<button data-tool="image" title="Görsel yükle ve ekle">🖼️ Görsel</button>
+					<span class="spacer"></span>
+					<div class="seg" id="viewSeg">
+						<button data-view="write">Yaz</button>
+						<button data-view="split">Böl</button>
+						<button data-view="preview">Önizle</button>
+					</div>
+				</div>
+				<div class="editor view-split" id="editor">
+					<textarea id="body" spellcheck="true" placeholder="Yazını buraya yaz…
+
+## Alt başlık
+Normal paragraflar, **kalın**, *italik*, [link](https://…)
+
+Görselleri bu alana sürükleyip bırakabilir ya da kopyalayıp yapıştırabilirsin (Ctrl+V)."></textarea>
+					<article id="preview" class="preview"></article>
+				</div>
+				<div class="editor-foot">
+					<span id="wordCount">0 kelime</span>
+					<span><kbd>Ctrl</kbd>+<kbd>S</kbd> kaydet · <kbd>Ctrl</kbd>+<kbd>B</kbd> kalın · <kbd>Ctrl</kbd>+<kbd>I</kbd> italik · <kbd>Ctrl</kbd>+<kbd>K</kbd> link</span>
+				</div>
+				<input id="imgFile" type="file" accept="image/*" multiple hidden />
+			</div>
+
+			<details class="card" id="seoCard" open>
+				<summary>SEO ve paylaşım <span class="score" id="seoScore"></span></summary>
+				<div class="seo-grid">
+					<div class="stack">
+						<label>
+							<span class="label-row">SEO başlığı <small class="counter" id="c-seoTitle"></small></span>
+							<input id="seoTitle" type="text" />
+							<span class="hint">Google'da ve sekme başlığında görünür. Boş bırakırsan "Başlık | Site adı" kullanılır.</span>
+						</label>
+						<label>
+							<span class="label-row">Meta açıklama <small class="counter" id="c-seoDescription"></small></span>
+							<textarea id="seoDescription" rows="3"></textarea>
+							<span class="hint">Boş bırakırsan yukarıdaki açıklama kullanılır.</span>
+						</label>
+						<label>Canonical URL
+							<input id="seoCanonical" type="url" placeholder="https://…" />
+							<span class="hint">Sadece yazı önce başka bir sitede (Medium vb.) yayınlandıysa, oradaki adresi yaz.</span>
+						</label>
+						<label class="check"><input id="seoNoindex" type="checkbox" /> Google'da gösterme (noindex)</label>
+					</div>
+					<div class="stack">
+						<div>
+							<div class="sub">Google önizlemesi</div>
+							<div class="serp">
+								<div class="serp-site"><span class="fav">✍️</span><span><span id="serpName"></span><small id="serpUrl"></small></span></div>
+								<div class="serp-title" id="serpTitle"></div>
+								<div class="serp-desc" id="serpDesc"></div>
+							</div>
+						</div>
+						<div>
+							<div class="sub">Paylaşım önizlemesi (WhatsApp, LinkedIn, X…)</div>
+							<div class="social">
+								<img id="socialImg" alt="" />
+								<div class="body"><div class="d" id="socialDomain"></div><div class="t" id="socialTitle"></div><div class="s" id="socialDesc"></div></div>
+							</div>
+						</div>
+						<div>
+							<div class="sub">Kontrol listesi</div>
+							<ul class="checks" id="checks"></ul>
+						</div>
+					</div>
+				</div>
+			</details>
+
+			<div class="danger-zone">
+				<span id="fileInfo"></span>
+				<button id="deleteBtn" class="btn danger small" hidden>Yazıyı sil</button>
+			</div>
+		</section>
+
+		<!-- ============================ KATEGORİLER ============================ -->
+		<section id="tab-categories" class="tab">
+			<div class="card">
+				<h2 class="h">Kategoriler</h2>
+				<p class="lead">Her kategorinin kendi sayfası olur: <code>/kategori/adres/</code>. İçinde yazı olan kategoriler silinemez ve adresleri değiştirilemez.</p>
+				<table class="cats">
+					<thead><tr><th style="width:22%">Ad</th><th style="width:18%">Adres</th><th>Açıklama</th><th>Yazı</th><th></th></tr></thead>
+					<tbody id="catBody"></tbody>
+				</table>
+				<button id="addCat" class="btn small" style="margin-top:8px">+ Kategori ekle</button>
+			</div>
+			<div class="tab-foot"><button class="btn primary" data-save="categories">Kategorileri kaydet</button></div>
+		</section>
+
+		<!-- ============================ SİTE AYARLARI ============================ -->
+		<section id="tab-site" class="tab">
+			<div class="card stack">
+				<h2 class="h">Genel</h2>
+				<div class="form-grid">
+					<label>Site adı <input type="text" data-path="title" /></label>
+					<label>Site açıklaması <input type="text" data-path="description" /><span class="hint">Ana sayfanın Google açıklaması.</span></label>
+					<label>Adın <input type="text" data-path="author.name" /></label>
+					<label>Unvan <input type="text" data-path="author.role" placeholder="örn. Yazılım Geliştirici" /></label>
+					<label class="full">Kısa tanıtım (ana sayfada görünür) <textarea rows="3" data-path="author.bio"></textarea></label>
+				</div>
+			</div>
+			<div class="card stack">
+				<h2 class="h">Sosyal medya</h2>
+				<p class="lead">Boş bıraktıkların sitede gösterilmez.</p>
+				<div class="form-grid">
+					<label>GitHub <input type="url" data-path="social.github" placeholder="https://github.com/…" /></label>
+					<label>LinkedIn <input type="url" data-path="social.linkedin" placeholder="https://www.linkedin.com/in/…" /></label>
+					<label>X (Twitter) <input type="url" data-path="social.x" placeholder="https://x.com/…" /></label>
+					<label>E-posta <input type="email" data-path="social.email" placeholder="ad@ornek.com" /><span class="hint">Herkese açık görünür; spam alabilirsin.</span></label>
+				</div>
+			</div>
+			<div class="card stack">
+				<h2 class="h">Google ve arama motorları</h2>
+				<div class="form-grid">
+					<label class="full">Google Search Console doğrulama kodu
+						<input type="text" data-path="seo.googleSiteVerification" placeholder="Kodu veya &lt;meta …&gt; etiketinin tamamını yapıştırabilirsin" />
+						<span class="hint"><a href="https://search.google.com/search-console" target="_blank" rel="noopener">Search Console</a> → Mülk ekle → "URL ön eki" → <code>https://metintekin.com</code> → Doğrulama yöntemi: <b>HTML etiketi</b>. Kaydet + Yayınla, sonra "Doğrula"ya bas. Ardından Site haritaları bölümüne <code>sitemap-index.xml</code> ekle.</span>
+					</label>
+					<label>Bing Webmaster doğrulama kodu
+						<input type="text" data-path="seo.bingSiteVerification" placeholder="isteğe bağlı" />
+						<span class="hint">Bing, Search Console'dan içe aktarma da sunar.</span>
+					</label>
+					<label>Google Analytics ölçüm kimliği
+						<input type="text" data-path="seo.googleAnalyticsId" placeholder="G-XXXXXXXXXX" />
+						<span class="hint">İsteğe bağlı. Çerez istemeyen alternatif: Cloudflare paneli → Web Analytics.</span>
+					</label>
+				</div>
+				<p class="hint">Sitede otomatik olarak zaten var: sitemap, robots.txt, RSS, Open Graph ve Twitter etiketleri, yapılandırılmış veri (JSON-LD), canonical adresler.</p>
+			</div>
+			<div class="tab-foot"><button class="btn primary" data-save="site">Ayarları kaydet</button></div>
+		</section>
+	</main>
+</div>
+
+<dialog id="publishDialog">
+	<h3>🚀 Yayınla</h3>
+	<p class="hint" style="margin:0">Değişiklikler commit edilip GitHub'a gönderilir; Cloudflare 1-2 dakikada siteyi günceller.</p>
+	<div id="pubInfo"></div>
+	<label style="margin-top:10px">Commit mesajı <input id="pubMsg" type="text" /></label>
+	<pre id="pubLog" hidden></pre>
+	<div class="row">
+		<button class="btn" id="pubCancel">Kapat</button>
+		<button class="btn primary" id="pubGo">Commit + Push</button>
+	</div>
+</dialog>
+
+<div id="toast"></div>
+
+<script type="module">
+// ------------------------------------------------------------ yardımcılar
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const pad = (n) => String(n).padStart(2, '0');
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const TR = { ç: 'c', ğ: 'g', ı: 'i', ö: 'o', ş: 's', ü: 'u' };
+const slugify = (s) => String(s).toLocaleLowerCase('tr-TR').replace(/[çğıöşü]/g, (c) => TR[c]).normalize('NFD')
+	.replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const assetUrl = (p) => (p || '').replace(/^(\.\.\/)+assets\//, '/files/');
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const cut = (s, n) => (s.length > n ? s.slice(0, n - 1).trimEnd() + '…' : s);
+const store = {
+	get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+	set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+	del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+const fmtDate = (s) => { if (!s) return ''; const [y, m, d] = s.split('-'); return `${+d} ${['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'][m - 1]} ${y}`; };
+
+let marked = null;
+try { ({ marked } = await import('/vendor/marked.js')); marked.setOptions({ gfm: true }); } catch { /* npm install yapılmamış */ }
+
+async function api(url, opts = {}) {
+	const res = await fetch(url, opts);
+	const data = await res.json().catch(() => ({}));
+	if (!res.ok || data.error) throw new Error(data.error || `Sunucu hatası (${res.status})`);
+	return data;
+}
+const postJSON = (url, body) => api(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+function toast(msg, type = '') {
+	const t = $('#toast');
+	t.textContent = msg;
+	t.className = `show ${type}`;
+	clearTimeout(toast.timer);
+	toast.timer = setTimeout(() => (t.className = type), type === 'bad' ? 5000 : 2600);
+}
+
+// ------------------------------------------------------------ durum
+const BACKUP_KEY = 'yazi-editoru-yedek';
+const state = {
+	posts: [], categories: [], site: {}, siteUrl: '', devUrl: '',
+	file: null, ext: '.md', assetSlug: null, slugTouched: false,
+	tags: [], heroImage: '', dirty: false, tab: 'post', filter: '',
+	catDraft: [], siteDirty: false, catDirty: false,
+};
+const f = (id) => $('#' + id);
+
+async function loadState() {
+	const s = await api('/api/state');
+	Object.assign(state, { posts: s.posts, categories: s.categories, site: s.site, siteUrl: s.siteUrl, devUrl: s.devUrl });
+	$('#siteName').textContent = s.siteUrl ? ' · ' + s.siteUrl.replace(/^https?:\/\//, '') : '';
+	renderPostList();
+	renderFilter();
+	renderCategoryOptions();
+	renderTagSuggestions();
+}
+
+// ------------------------------------------------------------ yazı listesi
+function catName(slug) { return state.categories.find((c) => c.slug === slug)?.name || slug || '—'; }
+
+function renderFilter() {
+	const box = $('#filter');
+	const btn = (slug, label) => `<button data-f="${esc(slug)}" class="${state.filter === slug ? 'active' : ''}">${esc(label)}</button>`;
+	box.innerHTML = btn('', 'Tümü') + state.categories.map((c) => btn(c.slug, c.name)).join('') + btn('__draft', 'Taslaklar');
+}
+$('#filter').addEventListener('click', (e) => {
+	const b = e.target.closest('button');
+	if (!b) return;
+	state.filter = b.dataset.f;
+	renderFilter();
+	renderPostList();
+});
+
+function renderPostList() {
+	const q = $('#search').value.trim().toLocaleLowerCase('tr-TR');
+	const list = state.posts.filter((p) => {
+		if (state.filter === '__draft' ? !p.draft : state.filter && p.category !== state.filter) return false;
+		if (!q) return true;
+		return [p.title, p.description, ...(p.tags || [])].join(' ').toLocaleLowerCase('tr-TR').includes(q);
+	});
+	$('#postList').innerHTML = list.length
+		? list.map((p) => `
+			<li data-file="${esc(p.file)}" class="${p.file === state.file ? 'active' : ''}">
+				<div class="pt">${esc(p.title || p.file)}</div>
+				<div class="pm">
+					${p.error ? '<span class="pill err">Hatalı</span>' : ''}
+					${p.draft ? '<span class="pill">Taslak</span>' : ''}
+					<span>${esc(catName(p.category))}</span>·<span>${esc(fmtDate(p.pubDate))}</span>
+				</div>
+			</li>`).join('')
+		: `<li class="empty">${state.posts.length ? 'Sonuç yok.' : 'Henüz yazı yok.'}</li>`;
+}
+$('#search').addEventListener('input', renderPostList);
+$('#postList').addEventListener('click', (e) => {
+	const li = e.target.closest('li[data-file]');
+	if (li) openPost(li.dataset.file);
+});
+
+async function refreshPosts() {
+	const s = await api('/api/state');
+	state.posts = s.posts;
+	state.devUrl = s.devUrl;
+	renderPostList();
+	renderTagSuggestions();
+}
+
+function confirmLeave() {
+	return !state.dirty || confirm('Kaydedilmemiş değişiklikler var. Kaydetmeden devam edilsin mi?');
+}
+
+async function openPost(file) {
+	if (file === state.file && !state.dirty) return switchTab('post');
+	if (!confirmLeave()) return;
+	try {
+		fillForm(await api('/api/post?file=' + encodeURIComponent(file)));
+		switchTab('post');
+	} catch (e) { toast(e.message, 'bad'); }
+}
+
+function newPost() {
+	if (!confirmLeave()) return;
+	fillForm({ pubDate: today(), category: state.categories[0]?.slug, tags: [], draft: false, body: '', seo: {} });
+	switchTab('post');
+	f('title').focus();
+}
+$('#newBtn').addEventListener('click', newPost);
+
+// ------------------------------------------------------------ form
+function renderCategoryOptions() {
+	const cur = f('category').value;
+	f('category').innerHTML = state.categories.map((c) => `<option value="${esc(c.slug)}">${esc(c.name)}</option>`).join('');
+	if (cur) f('category').value = cur;
+}
+function renderTagSuggestions() {
+	const all = [...new Set(state.posts.flatMap((p) => p.tags || []))].sort((a, b) => a.localeCompare(b, 'tr'));
+	$('#tagSuggestions').innerHTML = all.map((t) => `<option value="${esc(t)}"></option>`).join('');
+}
+
+function fillForm(p) {
+	state.file = p.file || null;
+	state.ext = p.ext || '.md';
+	state.assetSlug = p.file ? p.slug : null;
+	state.slugTouched = !!p.file;
+	state.tags = [...(p.tags || [])];
+	state.heroImage = p.heroImage || '';
+	f('title').value = p.title || '';
+	f('slug').value = p.slug || '';
+	f('category').value = p.category || state.categories[0]?.slug || '';
+	f('pubDate').value = p.pubDate || today();
+	f('updatedDate').value = p.updatedDate || '';
+	f('draft').checked = !!p.draft;
+	f('description').value = p.description || '';
+	f('body').value = p.body || '';
+	f('seoTitle').value = p.seo?.title || '';
+	f('seoDescription').value = p.seo?.description || '';
+	f('seoCanonical').value = p.seo?.canonical || '';
+	f('seoNoindex').checked = !!p.seo?.noindex;
+	renderTags();
+	renderHero();
+	setDirty(false);
+	renderPostList();
+	update();
+}
+
+function collect() {
+	return {
+		originalFile: state.file,
+		assetSlug: state.assetSlug,
+		ext: state.ext,
+		slug: slugify(f('slug').value || f('title').value),
+		title: f('title').value.trim(),
+		description: f('description').value.trim(),
+		pubDate: f('pubDate').value,
+		updatedDate: f('updatedDate').value,
+		category: f('category').value,
+		tags: state.tags,
+		draft: f('draft').checked,
+		heroImage: state.heroImage,
+		seo: {
+			title: f('seoTitle').value.trim(),
+			description: f('seoDescription').value.trim(),
+			canonical: f('seoCanonical').value.trim(),
+			noindex: f('seoNoindex').checked,
+		},
+		body: f('body').value,
+	};
+}
+
+function setDirty(v) {
+	state.dirty = v;
+	const s = $('#status');
+	s.textContent = v ? '● Kaydedilmedi' : state.file ? '✓ Kaydedildi' : '';
+	s.classList.toggle('dirty', v);
+	if (v) backup(); else store.del(BACKUP_KEY);
+}
+
+let backupTimer;
+function backup() {
+	clearTimeout(backupTimer);
+	backupTimer = setTimeout(() => store.set(BACKUP_KEY, JSON.stringify({ ...collect(), file: state.file, slug: f('slug').value, at: Date.now() })), 400);
+}
+
+let raf = 0;
+function changed() {
+	setDirty(true);
+	cancelAnimationFrame(raf);
+	raf = requestAnimationFrame(update);
+}
+
+// Tüm yazı alanları
+for (const id of ['category', 'pubDate', 'updatedDate', 'draft', 'description', 'body', 'seoTitle', 'seoDescription', 'seoCanonical', 'seoNoindex']) {
+	f(id).addEventListener(f(id).type === 'checkbox' || f(id).tagName === 'SELECT' ? 'change' : 'input', changed);
+}
+f('title').addEventListener('input', () => {
+	if (!state.slugTouched) f('slug').value = slugify(f('title').value);
+	changed();
+});
+f('slug').addEventListener('input', () => {
+	state.slugTouched = true;
+	const el = f('slug');
+	const pos = el.selectionStart;
+	el.value = el.value.toLocaleLowerCase('tr-TR').replace(/[çğıöşü]/g, (c) => TR[c]).replace(/[^a-z0-9-]/g, '-');
+	el.setSelectionRange(pos, pos);
+	changed();
+});
+f('slug').addEventListener('blur', () => {
+	f('slug').value = slugify(f('slug').value);
+	if (!f('slug').value) { state.slugTouched = false; f('slug').value = slugify(f('title').value); }
+	update();
+});
+
+// Etiketler
+function renderTags() {
+	$$('.tag', $('#tagBox')).forEach((e) => e.remove());
+	for (const t of state.tags) {
+		const el = document.createElement('span');
+		el.className = 'tag';
+		el.innerHTML = `#${esc(t)}<button type="button" title="Kaldır">×</button>`;
+		el.querySelector('button').onclick = () => { state.tags = state.tags.filter((x) => x !== t); renderTags(); changed(); };
+		$('#tagBox').insertBefore(el, f('tagInput'));
+	}
+}
+function addTag(raw) {
+	for (const part of raw.split(',')) {
+		const t = part.trim().replace(/^#/, '');
+		if (t && !state.tags.some((x) => x.toLocaleLowerCase('tr-TR') === t.toLocaleLowerCase('tr-TR'))) state.tags.push(t);
+	}
+	f('tagInput').value = '';
+	renderTags();
+	changed();
+}
+f('tagInput').addEventListener('keydown', (e) => {
+	if ((e.key === 'Enter' || e.key === ',') && f('tagInput').value.trim()) { e.preventDefault(); addTag(f('tagInput').value); }
+	else if (e.key === 'Enter') e.preventDefault();
+	else if (e.key === 'Backspace' && !f('tagInput').value && state.tags.length) { state.tags.pop(); renderTags(); changed(); }
+});
+f('tagInput').addEventListener('input', (e) => {
+	// datalist'ten seçildiğinde doğrudan ekle
+	if (e.inputType === 'insertReplacementText' || !e.inputType) addTag(f('tagInput').value);
+});
+f('tagInput').addEventListener('blur', () => { if (f('tagInput').value.trim()) addTag(f('tagInput').value); });
+$('#tagBox').addEventListener('click', (e) => { if (e.target.id === 'tagBox') f('tagInput').focus(); });
+
+// ------------------------------------------------------------ görseller
+function ensureAssetSlug() {
+	if (state.assetSlug) return state.assetSlug;
+	const slug = slugify(f('slug').value || f('title').value);
+	if (!slug) { toast('Önce bir başlık yaz; görseller yazının klasörüne kaydedilir.', 'bad'); f('title').focus(); return null; }
+	state.assetSlug = slug;
+	return slug;
+}
+
+async function uploadFile(file) {
+	const slug = ensureAssetSlug();
+	if (!slug) return null;
+	const name = file.name && file.name !== 'image.png' ? file.name : `gorsel-${Date.now().toString(36)}.${(file.type.split('/')[1] || 'png').replace('jpeg', 'jpg').replace('svg+xml', 'svg')}`;
+	$('#status').textContent = 'Görsel yükleniyor…';
+	try {
+		const r = await api(`/api/upload?slug=${encodeURIComponent(slug)}&name=${encodeURIComponent(name)}`, { method: 'POST', body: file });
+		toast(`Yüklendi: src/assets/blog/${slug}/${r.name}`);
+		return r;
+	} catch (e) {
+		toast(e.message, 'bad');
+		return null;
+	} finally {
+		setDirty(state.dirty);
+	}
+}
+
+function renderHero() {
+	const has = !!state.heroImage;
+	f('heroImg').hidden = !has;
+	f('heroRemove').hidden = !has;
+	if (has) f('heroImg').src = assetUrl(state.heroImage);
+}
+async function setHero(file) {
+	if (!file?.type.startsWith('image/')) return toast('Lütfen bir görsel dosyası seç.', 'bad');
+	const r = await uploadFile(file);
+	if (r) { state.heroImage = r.path; renderHero(); changed(); }
+}
+const heroDrop = $('#heroDrop');
+heroDrop.addEventListener('click', (e) => { if (!e.target.closest('#heroRemove')) f('heroFile').click(); });
+heroDrop.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); f('heroFile').click(); } });
+f('heroFile').addEventListener('change', () => { setHero(f('heroFile').files[0]); f('heroFile').value = ''; });
+f('heroRemove').addEventListener('click', () => { state.heroImage = ''; renderHero(); changed(); });
+heroDrop.addEventListener('dragover', (e) => { e.preventDefault(); heroDrop.classList.add('over'); });
+heroDrop.addEventListener('dragleave', () => heroDrop.classList.remove('over'));
+heroDrop.addEventListener('drop', (e) => { e.preventDefault(); heroDrop.classList.remove('over'); setHero(e.dataTransfer.files[0]); });
+
+async function insertImages(files) {
+	for (const file of files) {
+		const r = await uploadFile(file);
+		if (!r) continue;
+		const alt = file.name && file.name !== 'image.png' ? file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ').trim() : '';
+		insertText(`\n![${alt}](${r.path})\n`);
+	}
+}
+const body = f('body');
+const imageFiles = (list) => [...(list || [])].filter((x) => x.type.startsWith('image/'));
+body.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); body.classList.add('over'); } });
+body.addEventListener('dragleave', () => body.classList.remove('over'));
+body.addEventListener('drop', (e) => {
+	const files = imageFiles(e.dataTransfer.files);
+	body.classList.remove('over');
+	if (!files.length) return;
+	e.preventDefault();
+	insertImages(files);
+});
+body.addEventListener('paste', (e) => {
+	const files = imageFiles(e.clipboardData?.files);
+	if (!files.length) return;
+	e.preventDefault();
+	insertImages(files);
+});
+f('imgFile').addEventListener('change', () => { insertImages(imageFiles(f('imgFile').files)); f('imgFile').value = ''; });
+
+// ------------------------------------------------------------ editör araçları
+function insertText(text) {
+	body.focus();
+	if (!document.execCommand('insertText', false, text)) body.setRangeText(text, body.selectionStart, body.selectionEnd, 'end');
+	changed();
+}
+function wrap(before, after = before, placeholder = 'metin') {
+	const s = body.selectionStart, e = body.selectionEnd;
+	const sel = body.value.slice(s, e) || placeholder;
+	insertText(before + sel + after);
+	body.setSelectionRange(s + before.length, s + before.length + sel.length);
+}
+function linePrefix(prefix) {
+	const v = body.value;
+	const caretOnly = body.selectionStart === body.selectionEnd;
+	const start = v.lastIndexOf('\n', body.selectionStart - 1) + 1;
+	let end = v.indexOf('\n', Math.max(body.selectionEnd - (body.selectionEnd > body.selectionStart ? 1 : 0), start));
+	if (end === -1) end = v.length;
+	const lines = v.slice(start, end).split('\n');
+	const numbered = prefix === '1. ';
+	const has = (l) => (numbered ? /^\d+\. /.test(l) : l.startsWith(prefix));
+	const all = lines.every(has);
+	const out = lines.map((l, i) => {
+		if (all) return numbered ? l.replace(/^\d+\. /, '') : l.slice(prefix.length);
+		const clean = l.replace(/^(#{1,6} |> |- |\d+\. )/, '');
+		return (numbered ? `${i + 1}. ` : prefix) + clean;
+	}).join('\n');
+	body.focus();
+	body.setSelectionRange(start, end);
+	insertText(out);
+	// Sadece imleç varsa satır sonuna git (yazmaya devam edilebilsin), seçim varsa bloğu seçili bırak
+	if (caretOnly) body.setSelectionRange(start + out.length, start + out.length);
+	else body.setSelectionRange(start, start + out.length);
+}
+const TOOLS = {
+	h2: () => linePrefix('## '),
+	h3: () => linePrefix('### '),
+	bold: () => wrap('**'),
+	italic: () => wrap('*'),
+	strike: () => wrap('~~'),
+	link: () => {
+		const url = prompt('Link adresi:', 'https://');
+		if (url && url !== 'https://') wrap('[', `](${url})`, 'link metni');
+	},
+	ul: () => linePrefix('- '),
+	ol: () => linePrefix('1. '),
+	quote: () => linePrefix('> '),
+	code: () => wrap('`', '`', 'kod'),
+	codeblock: () => {
+		const lang = prompt('Kod dili (örn. js, csharp, bash — boş bırakabilirsin):', '') ?? null;
+		if (lang !== null) wrap('\n```' + lang.trim() + '\n', '\n```\n', 'kod');
+	},
+	table: () => insertText('\n| Başlık 1 | Başlık 2 |\n| --- | --- |\n| Hücre | Hücre |\n| Hücre | Hücre |\n'),
+	hr: () => insertText('\n\n---\n\n'),
+	image: () => { if (ensureAssetSlug()) f('imgFile').click(); },
+};
+$('#toolbar').addEventListener('click', (e) => {
+	const b = e.target.closest('button[data-tool]');
+	if (b) TOOLS[b.dataset.tool]();
+});
+body.addEventListener('keydown', (e) => {
+	const mod = e.ctrlKey || e.metaKey;
+	if (mod && e.key.toLowerCase() === 'b') { e.preventDefault(); TOOLS.bold(); }
+	else if (mod && e.key.toLowerCase() === 'i') { e.preventDefault(); TOOLS.italic(); }
+	else if (mod && e.key.toLowerCase() === 'k') { e.preventDefault(); TOOLS.link(); }
+	else if (e.key === 'Tab' && !e.shiftKey && body.selectionStart === body.selectionEnd) { e.preventDefault(); insertText('  '); }
+});
+
+// Görünüm: yaz / böl / önizle
+function setView(v) {
+	$('#editor').className = `editor view-${v}`;
+	$$('#viewSeg button').forEach((b) => b.classList.toggle('active', b.dataset.view === v));
+	store.set('yazi-editoru-gorunum', v);
+	renderPreview();
+}
+$('#viewSeg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) setView(b.dataset.view); });
+setView(store.get('yazi-editoru-gorunum') || 'split');
+
+// ------------------------------------------------------------ önizleme + SEO
+function renderPreview() {
+	const md = body.value;
+	if (!marked) { $('#preview').innerHTML = '<p class="placeholder">Önizleme için proje klasöründe <code>npm install</code> çalıştırıp editörü yeniden başlat.</p>'; return; }
+	const title = f('title').value.trim();
+	const html = md.trim() ? marked.parse(md) : '<p class="placeholder">Yazdıkların burada görünecek.</p>';
+	$('#preview').innerHTML = (title ? `<h1>${esc(title)}</h1>` : '') + html.replace(/(<img[^>]+src=")(?:\.\.\/)+assets\//g, '$1/files/');
+}
+
+function counter(id, len, min, max) {
+	const el = $('#c-' + id);
+	el.textContent = `${len} / ${max}`;
+	el.className = 'counter ' + (len >= min && len <= max ? 'ok' : len ? 'warn' : '');
+}
+
+function stats() {
+	const text = body.value
+		.replace(/```[\s\S]*?```/g, ' ')
+		.replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+		.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+		.replace(/[#>*_`~|-]/g, ' ');
+	const words = (text.match(/[\p{L}\p{N}]+/gu) || []).length;
+	return { words, minutes: Math.max(1, Math.round(words / 200)) };
+}
+
+function update() {
+	renderPreview();
+	const title = f('title').value.trim();
+	const desc = f('description').value.trim();
+	const slug = slugify(f('slug').value || title);
+	const siteTitle = state.site.title || '';
+	const seoTitle = f('seoTitle').value.trim() || (title ? `${title} | ${siteTitle}` : '');
+	const seoDesc = f('seoDescription').value.trim() || desc;
+	const host = (state.siteUrl || 'https://site.com').replace(/\/$/, '');
+	const { words, minutes } = stats();
+
+	f('seoTitle').placeholder = `${title || 'Başlık'} | ${siteTitle}`;
+	f('seoDescription').placeholder = desc || 'Boş bırakılırsa açıklama kullanılır';
+	f('draftBox').classList.toggle('on', f('draft').checked);
+	counter('description', desc.length, 70, 160);
+	counter('seoTitle', seoTitle.length, 30, 60);
+	counter('seoDescription', seoDesc.length, 70, 160);
+	$('#wordCount').textContent = `${words} kelime · ~${minutes} dk okuma`;
+
+	$('#serpName').textContent = siteTitle;
+	$('#serpUrl').textContent = `${host} › blog › ${slug || '…'}`;
+	$('#serpTitle').textContent = cut(seoTitle || 'Başlık', 62);
+	$('#serpDesc').textContent = cut(seoDesc || 'Açıklama yazılmadı. Google sayfadan rastgele bir bölüm gösterebilir.', 160);
+	f('socialImg').src = state.heroImage ? assetUrl(state.heroImage) : '/files/blog-placeholder-1.jpg';
+	$('#socialDomain').textContent = host.replace(/^https?:\/\//, '');
+	$('#socialTitle').textContent = cut(seoTitle || 'Başlık', 80);
+	$('#socialDesc').textContent = seoDesc;
+
+	const imgs = [...body.value.matchAll(/!\[([^\]]*)\]\(/g)];
+	const missingAlt = imgs.filter((m) => !m[1].trim()).length;
+	const checks = [
+		[title.length > 0, 'Başlık var'],
+		[seoTitle.length >= 30 && seoTitle.length <= 60, `SEO başlığı ${seoTitle.length} karakter (ideal 30–60)`],
+		[seoDesc.length >= 70 && seoDesc.length <= 160, `Açıklama ${seoDesc.length} karakter (ideal 70–160)`],
+		[slug.length > 0 && slug.length <= 60 && slug.split('-').length <= 8, 'Adres kısa ve okunaklı'],
+		[!!state.heroImage, 'Kapak görseli var (paylaşımlarda görünür)'],
+		[words >= 300, `${words} kelime (en az 300 önerilir)`],
+		[/^#{2,3} /m.test(body.value), 'Alt başlık (##) kullanılmış'],
+		[missingAlt === 0, missingAlt ? `${missingAlt} görselin açıklaması (alt metni) eksik: ![açıklama](…)` : 'Görsellerin açıklamaları tamam'],
+		[state.tags.length > 0, 'En az bir etiket var'],
+		[/\]\((https?:\/\/|\/)/.test(body.value), 'Yazıda en az bir link var'],
+	];
+	if (f('seoNoindex').checked) checks.unshift([false, 'noindex açık: bu yazı Google\'da görünmeyecek']);
+	if (f('draft').checked) checks.unshift([false, 'Taslak: kaydedilse bile sitede yayınlanmaz']);
+	$('#checks').innerHTML = checks.map(([ok, text]) => `<li class="${ok ? '' : 'warn'}">${esc(text)}</li>`).join('');
+	const passed = checks.filter(([ok]) => ok).length;
+	const score = $('#seoScore');
+	score.textContent = `${passed}/${checks.length}`;
+	score.className = 'score ' + (passed / checks.length >= 0.8 ? 'good' : 'mid');
+
+	$('#viewLink').href = state.devUrl ? `${state.devUrl}/blog/${slug}/` : '#';
+	$('#viewLink').hidden = !state.file || !state.devUrl;
+	$('#deleteBtn').hidden = !state.file;
+	$('#fileInfo').innerHTML = state.file ? `Dosya: <code>src/content/blog/${esc(state.file)}</code>` : 'Yeni yazı — henüz kaydedilmedi';
+}
+
+// ------------------------------------------------------------ kaydet / sil
+async function savePost() {
+	f('slug').value = slugify(f('slug').value || f('title').value);
+	const p = collect();
+	const missing = [];
+	if (!p.title) missing.push('başlık');
+	if (!p.description) missing.push('açıklama');
+	if (!p.category) missing.push('kategori');
+	if (!p.pubDate) missing.push('yayın tarihi');
+	if (missing.length) return toast('Eksik: ' + missing.join(', '), 'bad');
+	try {
+		const saved = await postJSON('/api/post', p);
+		const isNew = !state.file;
+		state.file = saved.file;
+		state.ext = saved.ext;
+		state.assetSlug = saved.slug;
+		state.slugTouched = true;
+		f('slug').value = saved.slug;
+		if (saved.body.trim() !== body.value.trim()) body.value = saved.body;
+		if (saved.heroImage !== state.heroImage) { state.heroImage = saved.heroImage; renderHero(); }
+		setDirty(false);
+		await refreshPosts();
+		update();
+		toast(isNew ? `Oluşturuldu: src/content/blog/${saved.file}` : 'Kaydedildi ✓');
+	} catch (e) { toast(e.message, 'bad'); }
+}
+
+$('#deleteBtn').addEventListener('click', async () => {
+	if (!state.file || !confirm(`"${f('title').value}" yazısı silinsin mi? (src/content/blog/${state.file})\n\nGörselleri src/assets/blog/ altında kalır.`)) return;
+	try {
+		await api('/api/post?file=' + encodeURIComponent(state.file), { method: 'DELETE' });
+		state.dirty = false;
+		toast('Yazı silindi.');
+		await refreshPosts();
+		newPost();
+	} catch (e) { toast(e.message, 'bad'); }
+});
+
+// ------------------------------------------------------------ kategoriler
+function renderCategoriesTab() {
+	const counts = {};
+	for (const p of state.posts) counts[p.category] = (counts[p.category] || 0) + 1;
+	$('#catBody').innerHTML = state.catDraft.map((c, i) => {
+		const n = counts[c.slug] || 0;
+		const lock = c.existing && n > 0;
+		return `<tr data-i="${i}">
+			<td><input type="text" data-k="name" value="${esc(c.name)}" placeholder="örn. Kitaplar" /></td>
+			<td><input type="text" data-k="slug" value="${esc(c.slug)}" ${lock ? 'readonly title="İçinde yazı olan kategorinin adresi değiştirilemez"' : ''} placeholder="kitaplar" /></td>
+			<td><input type="text" data-k="description" value="${esc(c.description)}" placeholder="Kategori sayfasında görünen kısa açıklama" /></td>
+			<td class="count">${n}</td>
+			<td><button class="btn small danger" data-del="${i}" ${n ? 'disabled title="Bu kategoride yazı var"' : ''}>Sil</button></td>
+		</tr>`;
+	}).join('');
+}
+function resetCatDraft() {
+	state.catDraft = state.categories.map((c) => ({ ...c, existing: true, slugTouched: true }));
+	state.catDirty = false;
+	renderCategoriesTab();
+}
+$('#catBody').addEventListener('input', (e) => {
+	const i = +e.target.closest('tr').dataset.i;
+	const k = e.target.dataset.k;
+	const c = state.catDraft[i];
+	c[k] = e.target.value;
+	if (k === 'slug') c.slugTouched = true;
+	if (k === 'name' && !c.slugTouched) {
+		c.slug = slugify(c.name);
+		e.target.closest('tr').querySelector('[data-k=slug]').value = c.slug;
+	}
+	state.catDirty = true;
+});
+$('#catBody').addEventListener('click', (e) => {
+	const b = e.target.closest('[data-del]');
+	if (!b) return;
+	state.catDraft.splice(+b.dataset.del, 1);
+	state.catDirty = true;
+	renderCategoriesTab();
+});
+$('#addCat').addEventListener('click', () => {
+	state.catDraft.push({ name: '', slug: '', description: '', existing: false, slugTouched: false });
+	state.catDirty = true;
+	renderCategoriesTab();
+	$$('#catBody tr').at(-1).querySelector('input').focus();
+});
+async function saveCategories() {
+	try {
+		const cats = await postJSON('/api/categories', state.catDraft.map(({ slug, name, description }) => ({ slug: slugify(slug || name), name, description })));
+		state.categories = cats;
+		resetCatDraft();
+		renderCategoryOptions();
+		renderFilter();
+		renderPostList();
+		toast('Kategoriler kaydedildi ✓');
+	} catch (e) { toast(e.message, 'bad'); }
+}
+
+// ------------------------------------------------------------ site ayarları
+const getPath = (o, p) => p.split('.').reduce((a, k) => a?.[k], o);
+function setPath(o, p, v) { const ks = p.split('.'); const last = ks.pop(); ks.reduce((a, k) => (a[k] ??= {}), o)[last] = v; }
+function renderSiteTab() {
+	$$('#tab-site [data-path]').forEach((el) => (el.value = getPath(state.site, el.dataset.path) ?? ''));
+	state.siteDirty = false;
+}
+$('#tab-site').addEventListener('input', () => (state.siteDirty = true));
+async function saveSite() {
+	const data = structuredClone(state.site);
+	$$('#tab-site [data-path]').forEach((el) => setPath(data, el.dataset.path, el.value));
+	try {
+		state.site = await postJSON('/api/site', data);
+		renderSiteTab();
+		update();
+		toast('Ayarlar kaydedildi ✓ (yayına almak için "Yayınla")');
+	} catch (e) { toast(e.message, 'bad'); }
+}
+$$('[data-save]').forEach((b) => b.addEventListener('click', () => (b.dataset.save === 'site' ? saveSite() : saveCategories())));
+
+// ------------------------------------------------------------ sekmeler
+function switchTab(tab) {
+	if (tab === state.tab) return;
+	if (state.tab === 'site' && state.siteDirty && !confirm('Site ayarlarındaki değişiklikler kaydedilmedi. Devam edilsin mi?')) return;
+	if (state.tab === 'categories' && state.catDirty && !confirm('Kategorilerdeki değişiklikler kaydedilmedi. Devam edilsin mi?')) return;
+	state.tab = tab;
+	$$('#tabs button').forEach((b) => b.classList.toggle('active', b.dataset.tab === tab));
+	$$('.tab').forEach((s) => s.classList.toggle('active', s.id === `tab-${tab}`));
+	$('#saveBtn').hidden = tab !== 'post';
+	if (tab === 'categories') resetCatDraft();
+	if (tab === 'site') renderSiteTab();
+}
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) switchTab(b.dataset.tab); });
+
+$('#saveBtn').addEventListener('click', savePost);
+document.addEventListener('keydown', (e) => {
+	if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+		e.preventDefault();
+		if (state.tab === 'post') savePost();
+		else if (state.tab === 'site') saveSite();
+		else saveCategories();
+	}
+});
+window.addEventListener('beforeunload', (e) => {
+	if (state.dirty || state.siteDirty || state.catDirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// ------------------------------------------------------------ yayınla
+const dlg = $('#publishDialog');
+$('#publishBtn').addEventListener('click', async () => {
+	$('#pubLog').hidden = true;
+	$('#pubGo').disabled = false;
+	$('#pubInfo').innerHTML = '<p class="hint">Değişiklikler kontrol ediliyor…</p>';
+	$('#pubMsg').value = state.tab === 'post' && f('title').value.trim() ? `Yazı: ${f('title').value.trim()}` : 'İçerik güncellemesi';
+	dlg.showModal();
+	try {
+		const s = await api('/api/git-status');
+		const warn = state.dirty || state.siteDirty || state.catDirty ? '<div class="warnbox">⚠️ Kaydedilmemiş değişikliklerin var. Önce kaydet, yoksa yayına gitmez.</div>' : '';
+		const drafts = state.posts.filter((p) => p.draft).length;
+		const draftNote = drafts ? `<p class="hint">${drafts} taslak yazı yayına çıkmayacak (bu normal).</p>` : '';
+		if (!s.files.length && !s.ahead) {
+			$('#pubInfo').innerHTML = warn + '<p>Gönderilecek değişiklik yok, site güncel. ✓</p>';
+			$('#pubGo').disabled = true;
+		} else {
+			$('#pubInfo').innerHTML = warn + (s.files.length
+				? `<p style="margin:10px 0 0"><b>${s.files.length}</b> değişen dosya (${esc(s.branch)} dalı):</p><pre>${esc(s.files.join('\n'))}</pre>`
+				: `<p>Daha önce commit edilmiş ${s.ahead} değişiklik gönderilecek.</p>`) + draftNote;
+		}
+	} catch (e) {
+		$('#pubInfo').innerHTML = `<div class="warnbox">${esc(e.message)}</div>`;
+		$('#pubGo').disabled = true;
+	}
+});
+$('#pubCancel').addEventListener('click', () => dlg.close());
+$('#pubGo').addEventListener('click', async () => {
+	$('#pubGo').disabled = true;
+	$('#pubGo').textContent = 'Gönderiliyor…';
+	try {
+		const r = await postJSON('/api/publish', { message: $('#pubMsg').value });
+		$('#pubLog').hidden = false;
+		$('#pubLog').textContent = r.log;
+		if (r.ok) toast('Gönderildi 🚀 Site 1-2 dakika içinde güncellenecek.');
+		else toast('Yayınlanamadı; ayrıntılar pencerede.', 'bad');
+	} catch (e) { toast(e.message, 'bad'); $('#pubGo').disabled = false; }
+	$('#pubGo').textContent = 'Commit + Push';
+});
+
+// ------------------------------------------------------------ başlangıç
+try {
+	await loadState();
+	const saved = store.get(BACKUP_KEY);
+	let restored = false;
+	if (saved) {
+		const b = JSON.parse(saved);
+		if (confirm(`Kaydedilmemiş bir yazı bulundu: "${b.title || 'Başlıksız'}". Geri yüklensin mi?`)) {
+			fillForm({ ...b, file: b.originalFile, slug: b.slug });
+			state.assetSlug = b.assetSlug;
+			setDirty(true);
+			restored = true;
+		} else store.del(BACKUP_KEY);
+	}
+	if (!restored) {
+		const first = new URLSearchParams(location.search).get('yazi');
+		if (first) await openPost(first); else newPost();
+	}
+	// astro dev biraz geç açılır; adresini sonradan al
+	if (!state.devUrl) setTimeout(async () => { try { await refreshPosts(); update(); } catch {} }, 6000);
+} catch (e) {
+	document.body.innerHTML = `<div style="padding:40px;font:16px system-ui"><h2>Editör başlatılamadı</h2><p>${esc(e.message)}</p><p>Terminalde <code>npm run yaz</code> komutunun çalıştığından emin ol.</p></div>`;
+}
+</script>
+</body>
+</html>

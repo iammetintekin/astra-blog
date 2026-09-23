@@ -9,11 +9,26 @@ import BaseLayout from './BaseLayout.astro';
 
 type Props = Post['data'] & { related?: Post[] };
 
-const { title, description, pubDate, updatedDate, heroImage, category, tags, draft, related = [] } =
+const { title, description, pubDate, updatedDate, heroImage, category, tags, draft, seo, related = [] } =
 	Astro.props;
 ---
 
-<BaseLayout title={`${title} | ${SITE_TITLE}`} description={description} image={heroImage} width="full">
+<BaseLayout
+	title={seo?.title || `${title} | ${SITE_TITLE}`}
+	description={seo?.description || description}
+	image={heroImage}
+	width="full"
+	type="article"
+	noindex={seo?.noindex || draft}
+	canonical={seo?.canonical}
+	article={{
+		headline: title,
+		publishedTime: pubDate,
+		modifiedTime: updatedDate,
+		section: getCategory(category).name,
+		tags,
+	}}
+>
 	<article>
 		<div class="hero-image">
 			{heroImage && <Image width={1020} height={510} src={heroImage} alt="" />}

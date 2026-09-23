@@ -1,0 +1,22 @@
+[
+	{
+		"slug": "yazilim",
+		"name": "Yazılım",
+		"description": "Kod, mimari, araçlar ve teknik notlar."
+	},
+	{
+		"slug": "teknoloji",
+		"name": "Teknoloji",
+		"description": "Yeni ürünler, trendler ve teknoloji üzerine düşünceler."
+	},
+	{
+		"slug": "kariyer",
+		"name": "Kariyer",
+		"description": "Çalışma hayatı, üretkenlik ve öğrenme."
+	},
+	{
+		"slug": "kisisel",
+		"name": "Kişisel",
+		"description": "Kitaplar, seyahatler ve hayata dair yazılar."
+	}
+]

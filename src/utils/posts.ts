@@ -23,7 +23,7 @@ export function slugify(text: string): string {
 		.toLocaleLowerCase('tr-TR')
 		.replace(/[çğıöşü]/g, (ch) => TR_CHARS[ch])
 		.normalize('NFD')
-		.replace(/[̀-ͯ]/g, '')
+		.replace(/[\u0300-\u036f]/g, '')
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-+|-+$/g, '');
 }

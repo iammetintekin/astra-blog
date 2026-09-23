@@ -1,0 +1,20 @@
+{
+	"title": "Metin Tekin",
+	"description": "Yazılım, teknoloji ve hayata dair notlarım.",
+	"author": {
+		"name": "Metin Tekin",
+		"role": "Yazılım Geliştirici",
+		"bio": "Burada yazılım, teknoloji ve kariyer üzerine öğrendiklerimi, denediklerimi ve kişisel notlarımı paylaşıyorum."
+	},
+	"social": {
+		"github": "https://github.com/iammetintekin",
+		"linkedin": "",
+		"x": "",
+		"email": ""
+	},
+	"seo": {
+		"googleSiteVerification": "",
+		"bingSiteVerification": "",
+		"googleAnalyticsId": ""
+	}
+}

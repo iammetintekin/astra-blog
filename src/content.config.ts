@@ -21,6 +21,15 @@ const blog = defineCollection({
 			tags: z.array(z.string()).default([]),
 			// true ise yazı yayına alınmaz; sadece `npm run dev` ile yerelde görünür
 			draft: z.boolean().default(false),
+			// İsteğe bağlı SEO ayarları (boş bırakılırsa başlık/açıklama kullanılır)
+			seo: z
+				.object({
+					title: z.string().optional(),
+					description: z.string().optional(),
+					canonical: z.url().optional(),
+					noindex: z.boolean().default(false),
+				})
+				.optional(),
 		}),
 });
 

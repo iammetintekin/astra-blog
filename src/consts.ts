@@ -1,38 +1,34 @@
-// Sitenin tüm genel ayarları burada. İsim, tanıtım, sosyal linkler ve
-// kategorileri değiştirmek için sadece bu dosyayı düzenlemen yeterli.
+// Site ayarları ve kategoriler src/data/ altındaki JSON dosyalarından gelir:
+//   - src/data/site.json        → site adı, yazar bilgisi, sosyal linkler, Google/SEO ayarları
+//   - src/data/categories.json  → kategoriler
+// En kolayı bunları yazı editöründen düzenlemek: `npm run yaz`
 
-export const SITE_TITLE = 'Metin Tekin';
-export const SITE_DESCRIPTION = 'Yazılım, teknoloji ve hayata dair notlarım.';
+import categories from './data/categories.json';
+import site from './data/site.json';
 
-export const AUTHOR = {
-	name: 'Metin Tekin',
-	role: 'Yazılım Geliştirici',
-	bio: 'Burada yazılım, teknoloji ve kariyer üzerine öğrendiklerimi, denediklerimi ve kişisel notlarımı paylaşıyorum.',
-};
+export const SITE_TITLE = site.title;
+export const SITE_DESCRIPTION = site.description;
+export const AUTHOR = site.author;
+export const SEO = site.seo;
 
-// href boş bırakılan linkler sitede gösterilmez.
+const email = site.social.email.trim();
+
+// href boş olan linkler sitede gösterilmez.
 export const SOCIAL_LINKS: { name: string; href: string; icon: 'github' | 'linkedin' | 'x' | 'mail' | 'rss' }[] = [
-	{ name: 'GitHub', href: 'https://github.com/iammetintekin', icon: 'github' },
-	{ name: 'LinkedIn', href: '', icon: 'linkedin' }, // örn. https://www.linkedin.com/in/kullanici-adin
-	{ name: 'X', href: '', icon: 'x' }, // örn. https://x.com/kullanici-adin
-	{ name: 'E-posta', href: '', icon: 'mail' }, // örn. mailto:ad@alanadi.com
+	{ name: 'GitHub', href: site.social.github, icon: 'github' },
+	{ name: 'LinkedIn', href: site.social.linkedin, icon: 'linkedin' },
+	{ name: 'X', href: site.social.x, icon: 'x' },
+	{ name: 'E-posta', href: email && !email.startsWith('mailto:') ? `mailto:${email}` : email, icon: 'mail' },
 	{ name: 'RSS', href: '/rss.xml', icon: 'rss' },
 ];
 
-// Kategoriler. Yeni kategori eklemek için listeye bir satır ekle;
-// yazılarda `category:` alanına buradaki `slug` değerini yazarsın.
-// Sayfa adresi /kategori/<slug>/ olur.
-export const CATEGORIES = [
-	{ slug: 'yazilim', name: 'Yazılım', description: 'Kod, mimari, araçlar ve teknik notlar.' },
-	{ slug: 'teknoloji', name: 'Teknoloji', description: 'Yeni ürünler, trendler ve teknoloji üzerine düşünceler.' },
-	{ slug: 'kariyer', name: 'Kariyer', description: 'Çalışma hayatı, üretkenlik ve öğrenme.' },
-	{ slug: 'kisisel', name: 'Kişisel', description: 'Kitaplar, seyahatler ve hayata dair yazılar.' },
-] as const;
+export type Category = { slug: string; name: string; description: string };
+export type CategorySlug = string;
 
-export type CategorySlug = (typeof CATEGORIES)[number]['slug'];
-export type Category = (typeof CATEGORIES)[number];
+// Yazılarda `category:` alanına buradaki `slug` değeri yazılır. Sayfa adresi /kategori/<slug>/ olur.
+export const CATEGORIES: Category[] = categories;
 
-export const CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug) as [CategorySlug, ...CategorySlug[]];
+export const CATEGORY_SLUGS = CATEGORIES.map((c) => c.slug) as [string, ...string[]];
 
 export function getCategory(slug: string): Category {
 	const category = CATEGORIES.find((c) => c.slug === slug);
